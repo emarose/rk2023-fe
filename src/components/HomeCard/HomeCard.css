@@ -1,0 +1,33 @@
+.HomeCardWrapper {
+  width: 100px;
+  height: 100px;
+  border: 1px solid var(--purple);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 5px;
+  margin: 0 0.5em;
+  border-radius: 4px;
+}
+.homeCardIcon {
+  font-size: 45px;
+  color: var(--purple);
+}
+.homeCardTitle {
+  color: var(--purple);
+}
+.HomeCardWrapper:hover {
+  cursor: pointer;
+  transition: 0.4s all;
+  background-color: var(--purple);
+}
+.HomeCardWrapper:hover .homeCardIcon {
+  color: white !important;
+}
+.HomeCardWrapper:hover .iconWrapper {
+  color: white !important;
+}
+.HomeCardWrapper:hover .homeCardTitle {
+  color: white !important;
+}
