@@ -1,137 +1,117 @@
-import React, { useEffect, useState } from "react";
-import NewRegisterForm from "../components/NewRegisterForm/NewRegisterForm";
-import Title from "antd/es/typography/Title";
-import axios from "axios";
-import Swal from "sweetalert2";
-import { Controller, useForm } from "react-hook-form";
-import { Button, Card, Col, Descriptions, Form, Input, Row, Space } from "antd";
-import TextArea from "antd/es/input/TextArea";
-import { purple } from "@ant-design/colors";
-const NewCustomerPage = () => {
-  const {
-    setValue,
-    handleSubmit,
-    reset,
-    control,
-    register,
-    formState: { errors },
-  } = useForm();
+import { Card, Dropdown, Input, Select, Space, Typography } from "antd";
 
+import axios from "axios";
+import React, { useEffect, useState } from "react";
+
+const NewCustomerPage = () => {
   const newCustomer = {
     customer_name: "",
-    address: "",
     contact: "",
     notes: "",
   };
-  const [form] = Form.useForm();
+  const [provincias, setProvincias] = useState([]);
+  const [ciudades, setCiudades] = useState([]);
+  const [provinciaSeleccionada, setProvinciaSeleccionada] = useState("06");
+  const [ciudadSeleccionada, setCiudadSeleccionada] = useState("Mar del Plata");
 
-  const submitNewCustomer = async (data) => {
-    try {
-      axios.post("http://localhost:3000/customers/add", data).then((response) =>
-        Swal.fire({
-          title: "Éxito!",
-          text: `${data.customer_name} se ha registrado correctamente.`,
-          icon: "success",
-          position: "bottom",
-          timer: 2500,
-          toast: true,
-          iconColor: purple[5],
-          timerProgressBar: true,
-          showConfirmButton: false,
-        })
-      );
+  useEffect(() => {
+    const listaProvincias = [];
+    const cargarProvincias = axios
+      .get("https://apis.datos.gob.ar/georef/api/provincias")
+      .then(function (response) {
+        const res = response.data.provincias;
+        res.map((provincia) =>
+          listaProvincias.push({ value: provincia.id, label: provincia.nombre })
+        );
+        const sortedList = listaProvincias.sort((a, b) =>
+          a.label.localeCompare(b.label)
+        );
+        setProvincias(sortedList);
+      })
+      .catch(function (error) {
+        console.log(error);
+      });
+  }, []);
 
-      setTimeout(() => {
-        form.resetFields();
-      }, 2000);
-    } catch (error) {
-      console.log(error);
-    }
-  };
+  useEffect(() => {
+    const listaCiudades = [];
+    const cargarCiudades = axios
+      .get(
+        `https://apis.datos.gob.ar/georef/api/municipios?provincia=${provinciaSeleccionada}`
+      )
+      .then(function (response) {
+        const res = response.data.municipios;
+
+        res.map((ciudad) =>
+          listaCiudades.push({ value: ciudad.id, label: ciudad.nombre })
+        );
+
+        if (provinciaSeleccionada === "06") {
+          listaCiudades.push({ value: "01", label: "Mar del Plata" });
+        }
+
+        const sortedList = listaCiudades.sort((a, b) =>
+          a.label.localeCompare(b.label)
+        );
+
+        const filtered = sortedList.filter((el) => el.value !== "060357");
+
+        setCiudades(filtered);
+      })
+      .catch(function (error) {
+        console.log(error);
+      });
+  }, [provinciaSeleccionada]);
 
   return (
-    <>
-      <Row gutter={32} align="center">
-        <Col md={10}>
-          <Card>
-            <Title level={1} style={{ margin: "1em auto" }}>
-              Nuevo Cliente
-            </Title>
-            <Form
-              form={form}
-              name="newCustomerForm"
-              onFinish={submitNewCustomer}
-              wrapperCol={{ span: 24 }}
-              style={{
-                margin: "0 auto",
-                maxWidth: "400px",
-              }}
-            >
-              <Form.Item name="customer_name">
-                <Input
-                  type="text"
-                  size="large"
-                  title="Nombre"
-                  placeholder="Nombre"
-                />
-              </Form.Item>
+    <Space direction="vertical" size="large">
+      <Typography.Title level={2}>Nuevo Cliente</Typography.Title>
 
-              <Form.Item name="address">
-                <Input
-                  type="text"
-                  size="large"
-                  title="Dirección"
-                  placeholder="Dirección"
-                />
-              </Form.Item>
+      <Card title={<Typography>Datos del cliente</Typography>} size="small">
+        <Input placeholder="Nombre" />
+        <Input placeholder="Apellido" />
+      </Card>
 
-              <Form.Item name="contact">
-                <Input
-                  type="text"
-                  size="large"
-                  title="Contacto"
-                  placeholder="Contacto"
-                />
-              </Form.Item>
+      <hr />
+      <h3>Direccion</h3>
+      <span>
+        <label htmlFor="provincia" style={{ display: "block" }}>
+          Provincia:
+        </label>
+        <Select
+          defaultValue={{ value: "06", label: "Buenos Aires" }}
+          style={{ width: 170 }}
+          onChange={(e) => {
+            setProvinciaSeleccionada(e);
+            setCiudadSeleccionada("Seleccione");
+          }}
+          options={provincias}
+        />
 
-              <Form.Item name="notes">
-                <TextArea
-                  autoSize={{ minRows: 2, maxRows: 5 }}
-                  size="large"
-                  title="Notas"
-                  placeholder="Notas"
-                />
-              </Form.Item>
-
-              <Button size="large" type="primary" htmlType="submit">
-                Registrar
-              </Button>
-            </Form>
-          </Card>
-        </Col>
-        <Col md={10}>
-          <Card title="Últimos clientes ingresados">
-            <div
-              style={{
-                width: "100%",
-                margin: "auto",
-                boxShadow: `0 0 1px 2px ${purple[1]}`,
-                border: `1px solid ${purple[2]}`,
-                borderRadius: "25px",
-                padding: "10px",
-              }}
-            >
-              <span style={{ display: "flex", justifyContent: "space-around" }}>
-                <p>pepe</p>
-                <p>direccion 1234</p>
-                <p>contacto</p>
-                <p>una notita chiquita</p>
-              </span>
-            </div>
-          </Card>
-        </Col>
-      </Row>
-    </>
+        <label htmlFor="provincia" style={{ display: "block" }}>
+          Ciudad:
+        </label>
+        <Select
+          defaultValue={{ value: "01", label: "Mar del Plata" }}
+          style={{ width: 170 }}
+          value={ciudadSeleccionada}
+          onChange={(e) => setCiudadSeleccionada(e)}
+          options={ciudades}
+        />
+      </span>
+      <input type="text" placeholder="Direccion" />
+      <input type="text" placeholder="Codigo Postal" />
+      <hr />
+      <h3>Contacto</h3>
+      {/* contactType */}
+      <input type="text" placeholder="Instagram" />
+      <input type="text" placeholder="Whatsapp" />
+      <input type="text" placeholder="Facebook" />
+      <input type="text" placeholder="" />
+      <input type="text" placeholder="" />
+      <input type="text" placeholder="" />
+      <button>Agregar contacto</button>
+    </Space>
   );
 };
 
